@@ -36,9 +36,11 @@ A first ruleset for the Quickstart
       name = event:attrs{"name"}.klog("your passed in name: ")
     }
     //action
-    // send_directive("say", {"something": "Hello " + (name || "Monkey")})
-    send_directive("say", {"something": "Hello " + (name => name | "monkey2")})
-    
+    every { // allows for multiple actions
+      send_directive("say", {"something": "Hello " + (name || "Monkey")})
+      // send_directive("say", {"something": "Hello " + (name => name | "monkey2")})
+    }
+    // i think the klog should show up in the online testing seciton,
     //postlude
   }
 
