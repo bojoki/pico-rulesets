@@ -37,7 +37,7 @@ A first ruleset for the Quickstart
     }
     //action
     // send_directive("say", {"something": "Hello " + (name || "Monkey")})
-    send_directive("say", {"something": "Hello " + (name => name | "moneky")})
+    send_directive("say", {"something": "Hello " + (name => name | "monkey2")})
     
     //postlude
   }
