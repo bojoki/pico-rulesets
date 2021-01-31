@@ -1,12 +1,15 @@
-ruleset twilio.module {
+ruleset my.twilio {
   meta {
-    name "Twilio Module"
+    name "my.twilio"
     description << A test module for twilio >>
     author "Forrest Olson"
     configure using 
-      apiToken = ""
-      apiSid = ""
-      apiPhone = ""
+      apiToken = meta:rulesetConfig{"apiToken"}
+      apiSid = meta:rulesetConfig{"apiSid"}
+      apiPhone = meta:rulesetConfig{"apiPhone"}
+      // apiToken = ""
+      // apiSid = ""
+      // apiPhone = ""
     provides getMessages, sendMessage
   }
 
@@ -18,16 +21,18 @@ ruleset twilio.module {
                       (receiveFilter => {"to":receiveFilter, "from":sendFilter} | {"from":sendFilter}) | 
                       (receiveFilter => {"to":receiveFilter} | {})
       // queryString = queryString.put("api_token", apiToken).put("api_sid", apiSid)
-      http:get(<<#{base_url}/2010-04-01/Accounts/#{apiSid}/Messages.json>>, qs=queryString)    
+      send_directive("say", {"message":http:get(<<#{base_url}/2010-04-01/Accounts/#{apiSid}/Messages>>, qs=queryString)})
+          
     }
-    messages = getMessages
+    // messages = getMessages
     // Write a user-defined action to send an SMS
     sendMessage = defaction(msg, to) {
       queryString = {} //"api_token":apiToken actually a map...
       body = {"body":msg, "to":to, "from":apiPhone}
       // might drop the .json below
-      response = http:post(<<#{base_url}/2010-04-01/Accounts/#{apiSid}/Messages.json>>, qs=queryString, json=body) 
+      send_directive("say", {"message":http:post(<<#{base_url}/2010-04-01/Accounts/#{apiSid}/Messages.json>>, qs=queryString, json=body)})
       // setting(response)
+
     }
   }
 
@@ -35,8 +40,10 @@ ruleset twilio.module {
     select when test send
 
     pre {
-
+      mess = event:attrs{"message"}
     }
+
+    sendMessage(mess, "+14357549364")
 
   }
 
@@ -44,8 +51,12 @@ ruleset twilio.module {
     select when test messages
 
     pre {
-
+      pages = event:attrs{"pages"} => event:attrs{"pages"} | none
+      fromFilter = event:attrs{"from"} => event:attrs{"from"} | none
+      toFilter = event:attrs{"to"} => event:attrs{"to"} | none
     }
+
+    getMessages(pages, fromFilter, toFilter)
 
   }
 }

@@ -1,13 +1,14 @@
 ruleset test_twilio_module {
   meta {
+    
     name "Twilio Module Test"
     description << Houses tests for my custom Twilio module >>
     author "Forrest Olson"
-    use module twilio.module alias twilio
+    use module my.twilio alias twilio 
       with 
-        apiToken = meta:rulesetConfig("apiToken")
-        apiSid = meta:rulesetConfig("apiSid")
-        apiPhone = meta:rulesetConfig("apiPhone")
+        apiToken = meta:rulesetConfig{"apiToken"}
+        apiSid = meta:rulesetConfig{"apiSid"}
+        apiPhone = meta:rulesetConfig{"apiPhone"}
     // shares test_get_messages, test_send_message
   }
 
@@ -22,7 +23,7 @@ ruleset test_twilio_module {
 
   rule test_all {
     // calling the function and returning the messages
-    select when test twilio
+    select when testy twilio
 
     pre {
       msg = event:attrs{"message"}.klog("your passed in msg: ")
@@ -33,12 +34,13 @@ ruleset test_twilio_module {
 
     every {
       twilio:sendMessage(msg, "+14357549364")
+      twilio:getMessages(pages, fromFilter, toFilter)
     }
   }
 
   rule test_send_message {
     // defining a rule which actually sends an SMS
-    select when test send
+    select when testy sendmess
 
     pre {
       msg = event:attrs{"message"}.klog("your passed in msg: ")
@@ -49,7 +51,7 @@ ruleset test_twilio_module {
   }
 
   rule test_messages {
-    select when test messages
+    select when testy messages
 
     pre {
       pages = event:attrs{"pages"} => event:attrs{"pages"} | none
