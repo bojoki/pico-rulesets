@@ -11,7 +11,7 @@ ruleset my.twilio2 {
       // apiSid = ""
       // apiPhone = ""
     provides getMessages, sendMessage
-    shares getCreds, getMessages
+    shares getCreds, getMessages, lastResponse
   }
 
   global {
@@ -21,7 +21,7 @@ ruleset my.twilio2 {
     getCreds = function () {
       return {"sid": apiSid, "token": apiToken}
     }
-    sendMessage = defaction(msg, to) {
+    sendMessage = defaction(to, msg) {
       queryString = {} //"api_token":apiToken actually a map...
       body = {"Body":msg, "To":to, "From":apiPhone}
       auth = {"user": apiSid, "password": apiToken}.klog("authorization")
@@ -47,7 +47,9 @@ ruleset my.twilio2 {
       response{"content"}.decode(){"messages"}
     }
     // messages = getMessages
-    
+    lastResponse = function() {
+      {}.put(ent:lastTimestamp,ent:lastResponse)
+    }
 
   }
 
@@ -58,15 +60,23 @@ ruleset my.twilio2 {
       mess = event:attrs{"message"}
     }
 
-    sendMessage(mess, "+14357549364")
+    sendMessage("14357549364", mess)
 
   }
 
   rule r2 {
     select when http post
 
-    if(event:attrs{"response"} like "^text/") then
-      send_directive("Page says...", {"respo":event:attrs{"response"}});
+    pre {
+      response = event:attrs{"response"} || none
+    }
+
+    send_directive("Page says...", {"respo":event:attrs{"response"}});
+
+    fired {
+      ent:lastResponse := response
+      ent:lastTimestamp := time:now()
+    }
   }
 
   // rule test_messages {

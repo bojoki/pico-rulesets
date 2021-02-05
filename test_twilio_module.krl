@@ -52,7 +52,7 @@ ruleset test_twilio_module {
     }
 
     every {
-      twilio:sendMessage(msg, "+14357549364")
+      twilio:sendMessage("14357549364", msg)
       twilio:getMessages(pages, fromFilter, toFilter)
     }
   }
@@ -65,7 +65,7 @@ ruleset test_twilio_module {
       msg = event:attrs{"message"}.klog("your passed in msg: ")
     }
     
-    twilio:sendMessage(msg, "14357549364") setting (response)
+    twilio:sendMessage("14357549364", msg) setting (response)
 
     fired {
       ent:lastResponse := response
