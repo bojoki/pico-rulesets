@@ -20,9 +20,32 @@ ruleset wovyn_base {
       temperature_threshold = 70
       my_phone = "14357549364"
       current_temp = function(time, tF, tC) {
-        "The current temperature at " + time + " is " + tF + " degrees F or " + tC + " degrees C" 
+        8.chr() + 10.chr() + 10.chr() + "        |Weather Report|
+
+Date: " + format_date(time) + "
+Time: " + format_time(time) + "
+F: " + tF + "°
+C: " + tC + "°
+
+Enjoy the fresh new day!" //+ 8.chr() + 10.chr() if blank space is needed after
+      }
+      format_timestamp = function (time) {
+        format_date(time) + " " + format_time(time)
+      }
+      format_date = function (time) {
+        time:strftime(time, "%A, %b %e, %Y") 
       }
 
+      // # Monday, October 6, 2010
+
+      // # Mon, Oct 6, 2010
+
+      // # Monday Oct 6, 2010
+
+      // # Mon Oct 6, 2010
+      format_time = function (time) {
+        time:strftime(time, "%r") 
+      }
     }
      
     rule process_heartbeat {
@@ -36,7 +59,7 @@ ruleset wovyn_base {
 
       fired {
         // time:new("8:00:00") time:now() event:attr("timestamp")
-        raise wovyn event "new_temperature_reading" attributes {"temperature" : genericThing{"data"}{"temperature"}, "timestamp": time:now()}
+        raise wovyn event "new_temperature_reading" attributes {"temperature" : genericThing{"data"}{"temperature"}, "timestamp": time:now({"tz" : "MST"})}
       }
   
     }
@@ -47,7 +70,7 @@ ruleset wovyn_base {
       pre {
         temp1 = event:attrs{"temperature"}[0].klog("new temp") || none
         tempF = temp1{"temperatureF"}.klog("F temp") || none
-        tempC = temp1{"temperatureF"}.klog("C temp") || none
+        tempC = temp1{"temperatureC"}.klog("C temp") || none
         tempTime = event:attrs{"timestamp"}.klog("time of temp") || none
       }
 

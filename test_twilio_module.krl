@@ -63,9 +63,10 @@ ruleset test_twilio_module {
 
     pre {
       msg = event:attrs{"message"}.klog("your passed in msg: ")
+      number = event:attrs{"number"}.klog("your num")
     }
     
-    twilio:sendMessage("14357549364", msg) setting (response)
+    twilio:sendMessage(number, msg) setting (response)
 
     fired {
       ent:lastResponse := response
