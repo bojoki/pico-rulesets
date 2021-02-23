@@ -10,7 +10,7 @@ ruleset test_twilio_module {
         apiSid = meta:rulesetConfig{"apiSid"}
         apiPhone = meta:rulesetConfig{"apiPhone"}
     // shares test_get_messages, test_send_message
-    shares lastResponse
+    shares lastResponse, getMessages
   }
 
   global {
@@ -20,6 +20,9 @@ ruleset test_twilio_module {
     // test_send_message = function(msg, to) {
     //   // twilio:sendMessage(msg, to)
     // }
+    getMessages = function(pages, fromFilter, toFilter) {
+      twilio:getMessages(pages, fromFilter, toFilter)
+    }
     lastResponse = function() {
       {}.put(ent:lastTimestamp,ent:lastResponse)
     }
@@ -82,8 +85,10 @@ ruleset test_twilio_module {
       pages = event:attrs{"pages"} => event:attrs{"pages"} | none
       fromFilter = event:attrs{"from"} => event:attrs{"from"} | none
       toFilter = event:attrs{"to"} => event:attrs{"to"} | none
+      messages = twilio:getMessages(pages, fromFilter, toFilter)
     }
 
-    twilio:getMessages(pages, fromFilter, toFilter)
+    send_directive("say", {"messages": messages})
+    
   }
 }
