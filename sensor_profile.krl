@@ -5,39 +5,42 @@ ruleset sensor_profile {
 A ruleset for creating a sensor profile
 >>
     author "Forrest Olson"
-    shares set_contact_number, set_threshold_temp 
+    shares contact_number, threshold_temp, sensor_location, sensor_name, sensor_info
   }
    
   global {
-    set_contact_number = function(number) {
-      contact_number = number;
-      contact_number
+    sensor_info = function() {
+      {"location":sensor_location(), "name":sensor_name(), "contact":contact_number(), "threshold":threshold_temp()}
     }
-    set_threshold_temp = function(temp) {
-      threshold_temp = temp;
-      threshold_temp
+    sensor_location = function() {
+      ent:sensor_location.defaultsTo("here")
     }
-    get_contact_number = function() {
-      contact_number
+    sensor_name = function() {
+      ent:sensor_name.defaultsTo("wovyn-temp")
     }
-    get_threshold_temp = function() {
-      threshold_temp
+    contact_number = function() {
+      ent:contact_number.defaultsTo(14357549364)
     }
-    contact_number = 14357549364
-    threshold_temp = 70
+    threshold_temp = function() {
+      ent:threshold_temp.defaultsTo(70)
+    }
   }
    
   rule profile_updated {
     select when sensor profile_updated
     pre {
-      sensor_location = event:attrs{"location"}.klog("your passed in name: ")
+      sensor_location = event:attrs{"location"}.klog("your passed in location: ")
       sensor_name = event:attrs{"name"}.klog("your passed in name: ")
+      threshold_temp = event:attrs{"threshold"}.klog("your passed in threshold temp: ")
+      contact_number = event:attrs{"contact"}.klog("your passed in number: ")
     }
     //action
-    send_directive("say", {"something": "Hello " + name})
+    send_directive("say", {"something": "Hello " + sensor_name})
     always {
       ent:sensor_name := sensor_name
       ent:sensor_location := sensor_location
+      ent:threshold_temp := threshold_temp
+      ent:contact_number := contact_number
     }
   }
    
