@@ -5,7 +5,7 @@ ruleset wovyn_base {
       author "Forrest Olson"
       shares hello
 
-      use module my.twilio alias twilio 
+      use module my.twilio2 alias twilio 
       with 
         apiToken = meta:rulesetConfig{"apiToken"}
         apiSid = meta:rulesetConfig{"apiSid"}

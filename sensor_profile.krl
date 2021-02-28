@@ -12,6 +12,9 @@ A ruleset for creating a sensor profile
     sensor_info = function() {
       {"location":sensor_location(), "name":sensor_name(), "contact":contact_number(), "threshold":threshold_temp()}
     }
+    get_info = function(loc, name, cont, thresh) {
+      {"location":loc, "name":name, "contact":cont, "threshold":thresh}
+    }
     sensor_location = function() {
       ent:sensor_location.defaultsTo("here")
     }
@@ -35,7 +38,7 @@ A ruleset for creating a sensor profile
       contact_number = event:attrs{"contact"}.klog("your passed in number: ")
     }
     //action
-    send_directive("say", {"something": "Hello " + sensor_name})
+    send_directive("info", {"old_info": sensor_info(), "new_info": get_info(sensor_location, sensor_name, contact_number, threshold_temp)})
     always {
       ent:sensor_name := sensor_name
       ent:sensor_location := sensor_location

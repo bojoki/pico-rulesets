@@ -3,25 +3,31 @@ ruleset temperature_store {
     name "Temp Store"
     description << A ruleset for storing temperatures >>
     author "Forrest Olson"
-    provides temperatures, threshold_violations, inrange_temperatures
-    shares temperatures, threshold_violations, inrange_temperatures
+    provides temperatures, threshold_violations, inrange_temperatures, current_temp
+    shares temperatures, threshold_violations, inrange_temperatures, current_temp, temperature_threshold
   }
    
   global {
-    temperature_threshold = 74
+    temperature_threshold = function() {
+      response = http:get(<<http://localhost:3000/sky/cloud/ckko8h61t000eqstzf1fg8lfo/sensor_profile/threshold_temp>>)
+      response{"content"}.decode(){"content"}
+    }
+    current_temp = function() {
+      ent:current_temp //.defaultsTo("no temp rn")
+    }
     temperatures = function() {
-      ent:temperatures
+      ent:temperatures //.defaultsTo("No temps rn");
     }
     threshold_violations = function() {
-      ent:threshold_violations
+      ent:threshold_violations //.defaultsTo("No temps rn");
     }
     inrange_temperatures = function () {
-      inrange_temperatures = ent:temperatures.filter(function(v) {
+      (ent:temperatures) => 
+      ent:temperatures.filter(function(v) {
         not ent:threshold_violations.any(function(x){
           x == v // for each temperature read, if matches in threshold violations, reject
         })
-      })
-      inrange_temperatures
+      }) | null;
     }
 
   }
@@ -40,6 +46,7 @@ ruleset temperature_store {
     send_directive("temp_reading", mappy)
    
     always {
+      ent:current_temp := tempF
       ent:temperatures := ent:temperatures.defaultsTo([]).append(mappy)
       raise wovyn event "threshold_violation" attributes mappy if tempF > temperature_threshold
       // .put("fTemp", tempF).put("cTemp", tempC)
