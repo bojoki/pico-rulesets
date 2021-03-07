@@ -133,9 +133,6 @@ ruleset manage_sensors {
     //     }
     //   }
     // )
-    always {
-
-    }
   }
 
   rule new_ruleset {
