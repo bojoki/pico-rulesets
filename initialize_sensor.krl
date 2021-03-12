@@ -11,8 +11,8 @@ ruleset initialize_sensor {
 
   }
   rule initialize {
-    // select when wrangler ruleset_installed where event:attr("rid") == meta:rid
-    select when 
+    select when wrangler ruleset_installed where event:attrs{"rids"}[0] == meta:rid
+    // select when 
     //   where event:attr("rids") >< meta:rid
     pre {
     //   tags = [meta:rid]
@@ -33,19 +33,21 @@ ruleset initialize_sensor {
         ep = {"allow":[{"domain":"*", "name":"*"}], "deny":[]}
         qp = {"allow":[{"domain":"*", "name":"*"}], "deny":[]}
     }
-    every{
+    every {
         wrangler:createChannel(tags,eventPolicy,queryPolicy)
-        foreach rids setting(rid)
-            event:send(
-                { 
-                    "eci": my_eci, "eid": random:word(),
-                    "domain": "wrangler", "type": "install_ruleset_request",
-                    "attrs": {
-                        "absoluteURL":meta:rulesetURI,
-                        "rid":rid,
-                        "config":{},
-                    }
-                }
-            )
+        wrangler:createChannel(tags,eventPolicy,queryPolicy)
+        // foreach rids setting(rid)
+        //     event:send(
+        //         { 
+        //             "eci": my_eci, "eid": random:word(),
+        //             "domain": "wrangler", "type": "install_ruleset_request",
+        //             "attrs": {
+        //                 "absoluteURL":meta:rulesetURI,
+        //                 "rid":rid,
+        //                 "config":{},
+        //             }
+        //         }
+        //     )
     }
+  }
 }
