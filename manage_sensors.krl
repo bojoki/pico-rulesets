@@ -3,7 +3,7 @@ ruleset manage_sensors {
     name "Sensor Manager"
     description << A way to manage sensors, i.e. creation, deletion, update.... >>
     author "Forrest Olson"
-    shares sensors, temperatures, nameFromID, showChildren
+    shares sensors, temperatures, nameFromID, showChildren, profiles
     use module io.picolabs.wrangler alias wrangler
   }
    
@@ -23,7 +23,18 @@ ruleset manage_sensors {
       // for each child
       // append temperatures to result
       // {}.toJson();
-      "pass"
+      sensors().map(function(v, k)  { 
+        wrangler:picoQuery(v.get("eci"), "temperature_store", "temperatures", {}.put())
+      })
+    }
+
+    profiles = function() {
+      // for each child
+      // append temperatures to result
+      // {}.toJson();
+      sensors().map(function(v, k)  { 
+        wrangler:picoQuery(v.get("eci"), "sensor_profile", "sensor_info", {}.put())
+      })
     }
 
     nameFromID = function(sensor_id) {
@@ -33,6 +44,11 @@ ruleset manage_sensors {
     showChildren = function() {
       wrangler:children()
     }
+
+    defaultThresh = function() {
+      99
+    }
+
   }
 
   rule initialize_sensors {
@@ -50,7 +66,7 @@ ruleset manage_sensors {
     // 2. installing the temperature_store, wovyn_base, sensor_profile, and io.picolabs.wovyn.emitter rulesets in the new sensor. 
     // 3. storing the value of an event attribute giving the sensor's name and the new sensors pico's ECI in an entity variable called sensors that maps its name to the ECI
     pre {
-      sensor_id = event:attr("sensor_id")
+      sensor_id = event:attrs{"sensor_id"}
       exists = ent:sensors && ent:sensors >< sensor_id
       // 5.
       // Modify the rule for creating a new sensors to not allow duplicate names.
@@ -87,25 +103,25 @@ ruleset manage_sensors {
     // 1. programmatically deleting the appropriate sensor pico (identified by an event attribute)
     // 2. removes the mapping in the entity variable for this sensor
     pre {
-      section_id = event:attr("section_id")
-      exists = ent:sections >< section_id
-      eci_to_delete = ent:sections{[section_id,"eci"]}
+      sensor_id = event:attrs{"sensor_id"}
+      exists = ent:sensors >< sensor_id
+      eci_to_delete = ent:sensors{[sensor_id,"eci"]}
     }
     if exists && eci_to_delete then
-      send_directive("deleting_section", {"section_id":section_id})
+      send_directive("deleting_section", {"sensor_id":sensor_id})
     fired {
       raise wrangler event "child_deletion_request"
         attributes {"eci": eci_to_delete};
-      clear ent:sections{section_id}
+      clear ent:sensors{sensor_id}
     }
   }
 
   rule new_child {
     select when wrangler new_child_created
     pre {
-      child_eci = event:attr("eci")
-      name = event:attr("name")
-      sensor_id = event:attr("sensor_id")
+      child_eci = event:attrs{"eci"}
+      name = event:attrs{"name"}
+      sensor_id = event:attrs{"sensor_id"}
       sensor_details = { "name": name, "eci": child_eci }
       // {
       //   // attributes provided by wrangler
@@ -117,22 +133,95 @@ ruleset manage_sensors {
       // }
 
     }
+    every {
+      // wrangler:createChannel(tags,eventPolicy,queryPolicy)
+      // asdf
+      event:send(
+        { "eci": child_eci, 
+          "eid": "install-ruleset", // can be anything, used for correlation
+          "domain": "wrangler", "type": "install_ruleset_request",
+          "attrs": {
+            "url": "file://C:\Users\forrest.olson\Desktop\forrest\pico-rulesets\twilio_module.krl",
+            // "rid": "twilio_module",
+            "config": {},
+            "sensor_id": sensor_id
+          }
+        }
+      )
+      
+      event:send(
+        { "eci": child_eci, 
+          "eid": "install-ruleset", // can be anything, used for correlation
+          "domain": "wrangler", "type": "install_ruleset_request",
+          "attrs": {
+            "url": "file://C:\Users\forrest.olson\Desktop\forrest\pico-rulesets\temperature_store.krl",
+            // "rid": "temperature_store",
+            "config": {},
+            "sensor_id": sensor_id
+          }
+        }
+      )
+      event:send(
+        { "eci": child_eci, 
+          "eid": "install-ruleset", // can be anything, used for correlation
+          "domain": "wrangler", "type": "install_ruleset_request",
+          "attrs": {
+            // "absoluteURL": meta:rulesetURI,
+            "url": "file://C:\Users\forrest.olson\Desktop\forrest\pico-rulesets\wovyn_base.krl",
+            // "rids": "temperature_store",
+            "config": {},
+            "sensor_id": sensor_id
+          }
+        }
+      )
+      event:send(
+        { "eci": child_eci, 
+          "eid": "install-ruleset", // can be anything, used for correlation
+          "domain": "wrangler", "type": "install_ruleset_request",
+          "attrs": {
+            "absoluteURL": "file://C:\Users\forrest.olson\Desktop\forrest\pico-rulesets/",
+            // "url": "file://C:\Users\forrest.olson\Desktop\forrest\pico-rulesets\sensor_profile.krl",
+            "rid": "sensor_profile",
+            // "rid": "temperature_store",
+            // "rid": "sensor_profile",
+            "config": {},
+            "sensor_id": sensor_id
+          }
+        }
+      )
+      event:send(
+        { "eci": child_eci, 
+          "eid": "install-ruleset", // can be anything, used for correlation
+          "domain": "wrangler", "type": "install_ruleset_request",
+          "attrs": {
+            // "absoluteURL": "file:///C:/Users/forrest.olson/AppData/Roaming/npm/node_modules/pico-engine/krl",
+            "url" : "file://C:\Users\forrest.olson\Desktop\forrest\pico-rulesets\io.picolabs.wovyn.emitter.krl",
+            // "rid": "io.picolabs.wovyn.emitter",
+            "config": {},
+            "sensor_id": sensor_id
+          }
+        }
+      )
+      event:send(
+        { "eci": child_eci, 
+          "eid": "update_profile", // can be anything, used for correlation
+          "domain": "sensor", "type": "profile_updated",
+          "attrs": {
+            "absoluteURL": "file:///C:/Users/forrest.olson/AppData/Roaming/npm/node_modules/pico-engine/krl",
+            // "url" : "https://raw.githubusercontent.com/windley/temperature-network/main/io.picolabs.wovyn.emitter.krl",
+            "rid": "io.picolabs.wovyn.emitter",
+            "config": {},
+            "name": name,
+            "threshold": defaultThresh(),
+            "sensor_id": sensor_id
+          }
+        }
+      )
+    }
+
     always {
       ent:sensors := ent:sensors.defaultsTo({}).put(sensor_id, sensor_details);
     }
-    // event:send(
-    //   {  
-    //     "eci": the_section.get("eci"), 
-    //     "eid": "install-ruleset", // can be anything, used for correlation
-    //     "domain": "wrangler", "type": "install_ruleset_request",
-    //     "attrs": {
-    //       "absoluteURL": meta:rulesetURI,
-    //       "rid": "app_section",
-    //       "config": {},
-    //       "section_id": section_id
-    //     }
-    //   }
-    // )
   }
 
   rule new_ruleset {

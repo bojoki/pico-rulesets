@@ -1,6 +1,6 @@
-ruleset my.twilio2 {
+ruleset twilio_module {
   meta {
-    name "my.twilio"
+    name "twilio_module"
     description << A test module for twilio >>
     author "Forrest Olson"
     configure using 
