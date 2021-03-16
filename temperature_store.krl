@@ -13,13 +13,13 @@ ruleset temperature_store {
       response{"content"}.decode(){"content"}
     }
     current_temp = function() {
-      ent:current_temp //.defaultsTo("no temp rn")
+      ent:current_temp.defaultsTo("no temp rn")
     }
     temperatures = function() {
-      ent:temperatures //.defaultsTo("No temps rn");
+      ent:temperatures.defaultsTo("No temps rn");
     }
     threshold_violations = function() {
-      ent:threshold_violations //.defaultsTo("No temps rn");
+      ent:threshold_violations.defaultsTo("No violations rn");
     }
     inrange_temperatures = function () {
       (ent:temperatures) => 
