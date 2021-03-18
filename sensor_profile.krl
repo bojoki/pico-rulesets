@@ -8,6 +8,7 @@ A ruleset for creating a sensor profile
     shares contact_number, threshold_temp, sensor_location, sensor_name, sensor_info, sensor_id
     use module io.picolabs.subscription alias subs
     use module io.picolabs.wrangler alias wrangler
+    use module temperature_store alias temps
   }
    
   global {
@@ -110,5 +111,21 @@ A ruleset for creating a sensor profile
       raise wrangler event "inbound_rejection"
         attributes event:attrs
     }
+  }
+
+  rule send_report {
+    select when report request
+
+
+    event:send({
+      "eci": event:attrs{"parentEci"},
+      "domain": "report", "name": "result",
+      "attrs": {
+        "reportTemp": temps:current_temp(),
+        "returnEci": event:attrs{"childEci"},
+        "reportId": event:attrs{"reportId"}
+      }
+    })
+    
   }
 }

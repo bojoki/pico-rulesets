@@ -3,35 +3,22 @@ ruleset manage_sensors {
     name "Sensor Manager"
     description << A way to manage sensors, i.e. creation, deletion, update.... >>
     author "Forrest Olson"
-    shares sensors, temperatures, nameFromID, showChildren, profiles
+    shares sensors, temperatures, nameFromID, showChildren, profiles, latestReports, reportNum
     use module io.picolabs.wrangler alias wrangler
   }
    
   global {
-    // 6. 
-    // Write a function in the manage_sensors ruleset called sensors that returns the child pico information 
-    // (which should be in the entity variable you created above).
     sensors = function() {
       ent:sensors.defaultsTo({})
     }
 
-    // 9.
-    // Write a function in the manage_sensors ruleset that calls the temperatures function in each of the sensors it knows about. 
-    // The result should be a JSON object combining the results returned by each sensor. 
-    // Be sure that the function continues to work even when sensors are added or deleted. 
     temperatures = function() {
-      // for each child
-      // append temperatures to result
-      // {}.toJson();
       sensors().map(function(v, k)  { 
         wrangler:picoQuery(v.get("eci"), "temperature_store", "temperatures", {}.put())
       })
     }
 
     profiles = function() {
-      // for each child
-      // append temperatures to result
-      // {}.toJson();
       sensors().map(function(v, k)  { 
         wrangler:picoQuery(v.get("eci"), "sensor_profile", "sensor_info", {}.put())
       })
@@ -48,7 +35,17 @@ ruleset manage_sensors {
     defaultThresh = function() {
       99
     }
-
+    reportNum = function() {
+      ent:reportNum.defaultsTo(1)
+    }
+    // reports = function() {
+    //   ent:reports.defaultsTo("No reports for reporting")
+    // }
+    latestReports = function() {
+      ent:reports.defaultsTo("No reports for reporting").filter(function(v, k){ 
+        k >= (ent:reportNum.defaultsTo(1) - 5)
+      })
+    }
   }
 
   rule initialize_sensors {
@@ -57,23 +54,20 @@ ruleset manage_sensors {
       ent:sensors := {}
     }
   }
+
+  rule initialize_report {
+    select when report needs_initialization
+    always {
+      ent:reportNum := 1
+      ent:reports := {}
+    }
+  }
    
   rule new_sensor {
     select when sensor new_sensor
-    // 3. 
-    // Write a rule in the manage_sensors ruleset that responds to a sensor:new_sensor event by 
-    // 1. programmatically creating a new pico to represent the sensor
-    // 2. installing the temperature_store, wovyn_base, sensor_profile, and io.picolabs.wovyn.emitter rulesets in the new sensor. 
-    // 3. storing the value of an event attribute giving the sensor's name and the new sensors pico's ECI in an entity variable called sensors that maps its name to the ECI
     pre {
       sensor_id = event:attrs{"sensor_id"}
       exists = ent:sensors && ent:sensors >< sensor_id
-      // 5.
-      // Modify the rule for creating a new sensors to not allow duplicate names.
-      // sensor_location = event:attrs{"location"}.klog("your passed in location: ")
-      // sensor_name = event:attrs{"name"}.klog("your passed in name: ")
-      // threshold_temp = event:attrs{"threshold"}.klog("your passed in threshold temp: ")
-      // contact_number = event:attrs{"contact"}.klog("your passed in number: ")
     }
     //action
     // send_directive("info", {"old_info": sensor_info(), "new_info": get_info(sensor_location, sensor_name, contact_number, threshold_temp)})
@@ -84,24 +78,12 @@ ruleset manage_sensors {
                      "backgroundColor": "#ff69b4",
                      "sensor_id": sensor_id }
     }
-      // ent:sensor_name := sensor_name
-      // ent:sensor_location := sensor_location
-      // ent:threshold_temp := threshold_temp
-      // ent:contact_number := contact_number
-      // 4.
-      // Programmatically send a sensor:profile_updated event to the child after it's created to set its name, notification SMS number, and default threshold. 
-      // The name should be an attribute of the sensor:new_sensor event and the threshold should be a default value defined in the manage_sensors ruleset. 
-      // You'll need to avoid race conditions so that you're not trying to update the profile before the system has finished creating the child and installing the desired rulesets.
   }
 
 
 
   rule unneeded_sensor {
     select when sensor unneeded_sensor
-    // 7. 
-    // Write a rule that responds to a sensor:unneeded_sensor event by 
-    // 1. programmatically deleting the appropriate sensor pico (identified by an event attribute)
-    // 2. removes the mapping in the entity variable for this sensor
     pre {
       sensor_id = event:attrs{"sensor_id"}
       exists = ent:sensors >< sensor_id
@@ -135,7 +117,6 @@ ruleset manage_sensors {
     }
     every {
       // wrangler:createChannel(tags,eventPolicy,queryPolicy)
-      // asdf
       event:send(
         { "eci": child_eci, 
           "eid": "install-ruleset", // can be anything, used for correlation
@@ -233,11 +214,76 @@ ruleset manage_sensors {
 
     }
   }
-// 8.
-// Write a script or test harness to test your set up. Ensure your test harness tests the rules and functions you defined by:
-// 1. creating multiple sensors and deleting at least one sensor. You only have one Wovyn device, so you'll only have one sensor pico that is actually connected to a device, the others will have the emitter simulator ruleset. Note: you'll have to reprogram the Wovyn sensor to send events to the new pico instead of the one you created manually and pause the emitter ruleset in that pico so it's not also firing. 
-// 2. tests the sensors by ensuring they respond correctly to new temperature events. 
-// 3. tests the sensor profile to ensure it's getting set reliably.
-   
 
+  rule initiate_report {
+    select when report initiate
+    pre {
+      new_report = {"temperature_sensors": ent:sensors.length(), 
+                    "responding" : ent:sensors.length(),
+                    "temperatures" : []}
+      
+    }
+    
+    send_directive("you dont say?", "reporting!")
+
+    fired {
+      raise report event "for_each_sensor" attributes {
+        "reportNum": ent:reportNum.defaultsTo(1)
+        }
+
+      ent:reports := ent:reports.defaultsTo({}).put(ent:reportNum.defaultsTo(1), new_report)
+      ent:reportNum := ent:reportNum.defaultsTo(1) + 1
+    }
+  }
+
+  rule for_each_sensor {
+    select when report for_each_sensor
+    foreach ent:sensors setting (sensor)
+      pre {
+        parent_eci = wrangler:children().filter(function(child) {
+          child.get("eci") == sensor.get("eci")
+        }).klog("now?").head().get("parent_eci").klog("parentECI?")
+        // .get("parent_eci")
+      }
+      event:send(
+        { 
+            "eci": sensor.get("eci"), "eid": random:word(),
+            "domain": "report", "type": "request",
+            "attrs": {
+                "reportId": event:attrs{"reportNum"},
+                "parentEci": parent_eci,
+                "childEci" : sensor.get("eci")
+            }
+        }
+      )
+  }
+
+  rule receive_report {
+    select when report result
+    // {<report_id>: {"temperature_sensors" : 4,
+    //               "responding" : 4,
+    //               "temperatures" : [<temperature reports from sensors>]
+    //              }
+    pre {
+      reportId = event:attrs{"reportId"}.klog("reportid")
+      result = event:attrs{"reportTemp"}
+      reports = ent:reports.defaultsTo({})
+      old_report = reports.get([reportId]).klog("old report")
+      old_num_sens = old_report.get("temperature_sensors")
+      old_temps = old_report.get(["temperatures"])
+      old_responding = old_report.get("responding")
+      new_report = {
+                    "temperature_sensors": old_num_sens, 
+                    "responding": (old_responding - 1), 
+                    "temperatures": old_temps.klog("oldTemps").append(result).klog("new Temps")
+                  }
+    }
+
+    send_directive("reported", event:attrs)
+
+    always {
+      ent:reports := reports.put([event:attrs{"reportId"}], new_report)
+    }
+
+  }   
 }
