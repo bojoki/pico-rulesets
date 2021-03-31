@@ -122,7 +122,7 @@ ruleset manage_sensors {
           "eid": "install-ruleset", // can be anything, used for correlation
           "domain": "wrangler", "type": "install_ruleset_request",
           "attrs": {
-            "url": "file://C:\Users\forrest.olson\Desktop\forrest\pico-rulesets\twilio_module.krl",
+            "url": "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets\twilio_module.krl",
             // "rid": "twilio_module",
             "config": {},
             "sensor_id": sensor_id
@@ -135,7 +135,7 @@ ruleset manage_sensors {
           "eid": "install-ruleset", // can be anything, used for correlation
           "domain": "wrangler", "type": "install_ruleset_request",
           "attrs": {
-            "url": "file://C:\Users\forrest.olson\Desktop\forrest\pico-rulesets\temperature_store.krl",
+            "url": "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets\temperature_store.krl",
             // "rid": "temperature_store",
             "config": {},
             "sensor_id": sensor_id
@@ -148,7 +148,7 @@ ruleset manage_sensors {
           "domain": "wrangler", "type": "install_ruleset_request",
           "attrs": {
             // "absoluteURL": meta:rulesetURI,
-            "url": "file://C:\Users\forrest.olson\Desktop\forrest\pico-rulesets\wovyn_base.krl",
+            "url": "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets\wovyn_base.krl",
             // "rids": "temperature_store",
             "config": {},
             "sensor_id": sensor_id
@@ -160,7 +160,7 @@ ruleset manage_sensors {
           "eid": "install-ruleset", // can be anything, used for correlation
           "domain": "wrangler", "type": "install_ruleset_request",
           "attrs": {
-            "absoluteURL": "file://C:\Users\forrest.olson\Desktop\forrest\pico-rulesets/",
+            "absoluteURL": "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets/",
             // "url": "file://C:\Users\forrest.olson\Desktop\forrest\pico-rulesets\sensor_profile.krl",
             "rid": "sensor_profile",
             // "rid": "temperature_store",
@@ -176,7 +176,7 @@ ruleset manage_sensors {
           "domain": "wrangler", "type": "install_ruleset_request",
           "attrs": {
             // "absoluteURL": "file:///C:/Users/forrest.olson/AppData/Roaming/npm/node_modules/pico-engine/krl",
-            "url" : "file://C:\Users\forrest.olson\Desktop\forrest\pico-rulesets\io.picolabs.wovyn.emitter.krl",
+            "url" : "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets\io.picolabs.wovyn.emitter.krl",
             // "rid": "io.picolabs.wovyn.emitter",
             "config": {},
             "sensor_id": sensor_id

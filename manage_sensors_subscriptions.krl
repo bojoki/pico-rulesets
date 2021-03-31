@@ -97,7 +97,18 @@ ruleset manage_sensors_subscriptions {
           "eid": "install-ruleset", // can be anything, used for correlation
           "domain": "wrangler", "type": "install_ruleset_request",
           "attrs": {
-            "absoluteURL": "file://C:\Users\forrest.olson\Desktop\forrest\pico-rulesets/",
+            "url": "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets\temperature_store.krl",
+            "config": {},
+            "sensor_id": sensor_id
+          }
+        }
+      )
+      event:send(
+        { "eci": child_eci, 
+          "eid": "install-ruleset", // can be anything, used for correlation
+          "domain": "wrangler", "type": "install_ruleset_request",
+          "attrs": {
+            "absoluteURL": "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets/",
             "rid": "sensor_profile",
             "config": {},
             "sensor_id": sensor_id,
@@ -110,30 +121,20 @@ ruleset manage_sensors_subscriptions {
           "eid": "install-ruleset", // can be anything, used for correlation
           "domain": "wrangler", "type": "install_ruleset_request",
           "attrs": {
-            "url": "file://C:\Users\forrest.olson\Desktop\forrest\pico-rulesets\twilio_module.krl",
+            "url": "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets\twilio_module.krl",
             "config": {},
             "sensor_id": sensor_id
           }
         }
       )
       
+
       event:send(
         { "eci": child_eci, 
           "eid": "install-ruleset", // can be anything, used for correlation
           "domain": "wrangler", "type": "install_ruleset_request",
           "attrs": {
-            "url": "file://C:\Users\forrest.olson\Desktop\forrest\pico-rulesets\temperature_store.krl",
-            "config": {},
-            "sensor_id": sensor_id
-          }
-        }
-      )
-      event:send(
-        { "eci": child_eci, 
-          "eid": "install-ruleset", // can be anything, used for correlation
-          "domain": "wrangler", "type": "install_ruleset_request",
-          "attrs": {
-            "url": "file://C:\Users\forrest.olson\Desktop\forrest\pico-rulesets\wovyn_base.krl",
+            "url": "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets\wovyn_base.krl",
             "config": {},
             "sensor_id": sensor_id
           }
@@ -145,27 +146,27 @@ ruleset manage_sensors_subscriptions {
           "eid": "install-ruleset", // can be anything, used for correlation
           "domain": "wrangler", "type": "install_ruleset_request",
           "attrs": {
-            "url" : "file://C:\Users\forrest.olson\Desktop\forrest\pico-rulesets\io.picolabs.wovyn.emitter.krl",
+            "url" : "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets\io.picolabs.wovyn.emitter.krl",
             "config": {},
             "sensor_id": sensor_id
           }
         }
       )
-      event:send(
-        { "eci": child_eci, 
-          "eid": "update_profile", // can be anything, used for correlation
-          "domain": "sensor", "type": "profile_updated",
-          "attrs": {
-            "absoluteURL": "file:///C:/Users/forrest.olson/AppData/Roaming/npm/node_modules/pico-engine/krl",
-            // "url" : "https://raw.githubusercontent.com/windley/temperature-network/main/io.picolabs.wovyn.emitter.krl",
-            "rid": "io.picolabs.wovyn.emitter",
-            "config": {},
-            "name": name,
-            "threshold": defaultThresh(),
-            "sensor_id": sensor_id
-          }
-        }
-      )
+      // event:send(
+      //   { "eci": child_eci, 
+      //     "eid": "update_profile", // can be anything, used for correlation
+      //     "domain": "sensor", "type": "profile_updated",
+      //     "attrs": {
+      //       "absoluteURL": "file:///C:/Users/forrest.olson/AppData/Roaming/npm/node_modules/pico-engine/krl",
+      //       // "url" : "https://raw.githubusercontent.com/windley/temperature-network/main/io.picolabs.wovyn.emitter.krl",
+      //       "rid": "io.picolabs.wovyn.emitter",
+      //       "config": {},
+      //       "name": name,
+      //       "threshold": defaultThresh(),
+      //       "sensor_id": sensor_id
+      //     }
+      //   }
+      // )
     }
 
     always {
