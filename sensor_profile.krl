@@ -79,39 +79,39 @@ A ruleset for creating a sensor profile
     always {
       ent:sensor_collection_wellKnown_eci := sensor_collection_wellKnown_eci
       ent:sensor_id := sensor_id
-      raise sensor event "new_subscription_request"
+      // raise sensor event "new_subscription_request"
     }
   }
 
-  rule make_subscription {
-    select when sensor new_subscription_request
-    event:send({
-      "eci": ent:sensor_collection_wellKnown_eci,
-      "domain": "wrangler", "name": "subscription",
-      "attrs": {
-        "wellKnown_Tx": subs:wellKnown_Rx(){"id"}, // should this be the sensor or the collector?
-        "Rx_role":"manager", "Tx_role":"sensor",
-        "name": ent:sensor_id.defaultsTo("newSub").as("String"), "channel_type": "subscription"
-      }
-    })
-  }
+  // rule make_subscription {
+  //   select when sensor new_subscription_request
+  //   event:send({
+  //     "eci": ent:sensor_collection_wellKnown_eci,
+  //     "domain": "wrangler", "name": "subscription",
+  //     "attrs": {
+  //       "wellKnown_Tx": subs:wellKnown_Rx(){"id"}, // should this be the sensor or the collector?
+  //       "Rx_role":"manager", "Tx_role":"sensor",
+  //       "name": ent:sensor_id.defaultsTo("newSub").as("String"), "channel_type": "subscription"
+  //     }
+  //   })
+  // }
 
-  rule auto_accept {
-    select when wrangler inbound_pending_subscription_added
-    pre {
-      my_role = event:attrs{"Rx_role"}
-      their_role = event:attrs{"Tx_role"}
-    }
-    if my_role == "sensor" && their_role == "manager" then noop()
-    fired {
-      raise wrangler event "pending_subscription_approval"
-        attributes event:attrs
-      ent:subscriptionTx:= event:attrs{"Tx"}
-    } else {
-      raise wrangler event "inbound_rejection"
-        attributes event:attrs
-    }
-  }
+  // rule auto_accept {
+  //   select when wrangler inbound_pending_subscription_added
+  //   pre {
+  //     my_role = event:attrs{"Rx_role"}
+  //     their_role = event:attrs{"Tx_role"}
+  //   }
+  //   if my_role == "sensor" && their_role == "manager" then noop()
+  //   fired {
+  //     raise wrangler event "pending_subscription_approval"
+  //       attributes event:attrs
+  //     ent:subscriptionTx:= event:attrs{"Tx"}
+  //   } else {
+  //     raise wrangler event "inbound_rejection"
+  //       attributes event:attrs
+  //   }
+  // }
 
   rule send_report {
     select when report request
