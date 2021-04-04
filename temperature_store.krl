@@ -46,7 +46,7 @@ ruleset temperature_store {
     send_directive("temp_reading", mappy)
    
     always {
-      ent:current_temp := tempF
+      ent:current_temp := { "temp":tempF, "time":tempTime }
       ent:temperatures := ent:temperatures.defaultsTo([]).append(mappy)
       raise wovyn event "threshold_violation" attributes mappy if tempF > temperature_threshold
       // .put("fTemp", tempF).put("cTemp", tempC)

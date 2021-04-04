@@ -154,8 +154,21 @@ ruleset gossip.spawner {
             "attrs": {
               "wellKnown_Tx": ent:sensors.get([second_node, "wellKnown_eci"]), 
               "Rx_role":"node", "Tx_role":"node",
-              "name": ent:sensor_id.defaultsTo("newSub").as("String"), "channel_type": "subscription"
+              "name": ent:sensor_id.defaultsTo("newSub").as("String"), "channel_type": "subscription",
+              "rx_node":first_node, "tx_node":second_node
             }
           })
+    }
+
+    rule reset_nodes {
+        select when spawner initialize
+        foreach ent:sensors setting (sensor)
+        event:send(
+            { 
+                "eci": sensor.get("eci"), "eid": random:word(),
+                "domain": "node", "type": "reset",
+                "attrs": {}
+            }
+          )
     }
 }
