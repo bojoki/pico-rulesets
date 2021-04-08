@@ -53,6 +53,8 @@ ruleset gossip.spawner {
                 }
             )
         }
+
+        
     } 
     rule initialize_ruleset {
         select when ruleset initialize
@@ -103,26 +105,43 @@ ruleset gossip.spawner {
             name = event:attrs{"name"}
             sensor_id = event:attrs{"sensor_id"}
             sensor_details = { "name": name, "eci": child_eci }
+            mac = 1
+            files = mac => [
+                    "file:///Users/Bojoki/Desktop/BYU 2021 Winter/pico-rulesets/temperature_store.krl",
+                    "file:///Users/Bojoki/Desktop/BYU 2021 Winter/pico-rulesets/sensor_profile.krl",
+                    "file:///Users/Bojoki/Desktop/BYU 2021 Winter/pico-rulesets/twilio_module.krl",
+                    "file:///Users/Bojoki/Desktop/BYU 2021 Winter/pico-rulesets/wovyn_base.krl",
+                    "file:///Users/Bojoki/Desktop/BYU 2021 Winter/pico-rulesets/io.picolabs.wovyn.emitter.krl",
+                    "file:///Users/Bojoki/Desktop/BYU 2021 Winter/pico-rulesets/gossip/gossip-node.krl"
+                ] | [
+                    "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets/temperature_store.krl",
+                    "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets/sensor_profile.krl",
+                    "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets/twilio_module.krl",
+                    "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets/wovyn_base.krl",
+                    "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets\io.picolabs.wovyn.emitter.krl",
+                    "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets\gossip/gossip-node.krl"
+                ]
+            i = 0
         }
         every {
             install_custom_ruleset(child_eci,
-                                    "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets/temperature_store.krl",
-                                    {"sensor_id":sensor_id}) // remove config... just append this to call.
+                files[0],
+                {"sensor_id":sensor_id}) // remove config... just append this to call.
             install_custom_ruleset(child_eci,
-                                    "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets/sensor_profile.krl",
-                                    {"sensor_id": sensor_id,
-                                    "sensor_collection_wellKnown_eci": subs:wellKnown_Rx(){"id"}})
+                files[1],
+                {"sensor_id": sensor_id,
+                "sensor_collection_wellKnown_eci": subs:wellKnown_Rx(){"id"}})
             install_custom_ruleset(child_eci,
-                                    "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets/twilio_module.krl",
-                                    {"sensor_id": sensor_id})
+                files[2],
+                {"sensor_id": sensor_id})
             install_custom_ruleset(child_eci,
-                                    "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets/wovyn_base.krl",
-                                    {"sensor_id": sensor_id})
+                files[3],
+                {"sensor_id": sensor_id})
             install_custom_ruleset(child_eci,
-                                    "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets\io.picolabs.wovyn.emitter.krl",
-                                    {"sensor_id": sensor_id})
+                files[4],
+                {"sensor_id": sensor_id})
             install_custom_ruleset(child_eci,
-                "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets\gossip/gossip-node.krl",
+                files[5],
                 {"sensor_id": sensor_id})
         }
 
