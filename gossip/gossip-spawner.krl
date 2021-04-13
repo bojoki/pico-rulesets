@@ -54,26 +54,66 @@ ruleset gossip.spawner {
             )
         }
 
-        
+        reset_nodes = defaction(sensor) {
+            event:send(
+                { 
+                    "eci": sensor.get("eci"), "eid": random:word(),
+                    "domain": "node", "type": "reset",
+                    "attrs": {}
+                }
+              )
+        }
+
+        start_gossip_in_nodes = defaction(sensor) {
+            event:send({
+                "eci": sensor.get("eci"),
+                "domain": "gossip", "name": "heartbeat",
+                "attrs": {}
+              })
+        }
+
+        subscribe = defaction(from, to) {
+            event:send({
+                "eci": ent:sensors.get([from, "eci"]),
+                "domain": "wrangler", "name": "subscription",
+                "attrs": {
+                  "wellKnown_Tx": ent:sensors.get([to, "wellKnown_eci"]), 
+                  "Rx_role":"node", "Tx_role":"node",
+                  "name": ent:sensor_id.defaultsTo("newSub").as("String"), "channel_type": "subscription",
+                  "rx_node":from, "tx_node":to
+                }
+              })
+        }
     } 
+
+    rule start_heartbeats {
+        select when gossip initiate
+        foreach ent:sensors setting (sensor)
+        start_gossip_in_nodes(sensor)
+    }
+
     rule initialize_ruleset {
         select when ruleset initialize
     }
+
     rule initialize_sensors {
         select when sensors need_initialization
         always {
           ent:sensors := {}
           ent:subs := {}
         }
-      }
+    }
        
     rule new_sensor {
         select when sensor new_sensor
+
         pre {
             sensor_id = event:attrs{"sensor_id"}
             exists = ent:sensors && ent:sensors >< sensor_id
         }
+
         if not exists then noop()
+
         fired {
             raise wrangler event "new_child_request"
             attributes { "name": nameFromID(sensor_id),
@@ -84,13 +124,15 @@ ruleset gossip.spawner {
 
     rule unneeded_sensor {
         select when sensor unneeded_sensor
+
         pre {
             sensor_id = event:attrs{"sensor_id"}
             exists = ent:sensors >< sensor_id
             eci_to_delete = ent:sensors{[sensor_id,"eci"]}
         }
-        if exists && eci_to_delete then
-            send_directive("deleting_section", {"sensor_id":sensor_id})
+
+        if exists && eci_to_delete then send_directive("deleting_section", {"sensor_id":sensor_id})
+
         fired {
             raise wrangler event "child_deletion_request"
             attributes {"eci": eci_to_delete};
@@ -100,29 +142,33 @@ ruleset gossip.spawner {
 
     rule new_child {
         select when wrangler new_child_created
+
         pre {
             child_eci = event:attrs{"eci"}
             name = event:attrs{"name"}
             sensor_id = event:attrs{"sensor_id"}
             sensor_details = { "name": name, "eci": child_eci }
-            mac = 1
+            mac = 0
             files = mac => [
                     "file:///Users/Bojoki/Desktop/BYU 2021 Winter/pico-rulesets/temperature_store.krl",
                     "file:///Users/Bojoki/Desktop/BYU 2021 Winter/pico-rulesets/sensor_profile.krl",
                     "file:///Users/Bojoki/Desktop/BYU 2021 Winter/pico-rulesets/twilio_module.krl",
                     "file:///Users/Bojoki/Desktop/BYU 2021 Winter/pico-rulesets/wovyn_base.krl",
                     "file:///Users/Bojoki/Desktop/BYU 2021 Winter/pico-rulesets/io.picolabs.wovyn.emitter.krl",
-                    "file:///Users/Bojoki/Desktop/BYU 2021 Winter/pico-rulesets/gossip/gossip-node.krl"
+                    "file:///Users/Bojoki/Desktop/BYU 2021 Winter/pico-rulesets/gossip/gossip-node.krl",
+                    "file:///Users/Bojoki/Desktop/BYU 2021 Winter/pico-rulesets/gossip/gossip-consolidated.krl"
                 ] | [
                     "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets/temperature_store.krl",
                     "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets/sensor_profile.krl",
                     "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets/twilio_module.krl",
                     "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets/wovyn_base.krl",
                     "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets\io.picolabs.wovyn.emitter.krl",
-                    "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets\gossip/gossip-node.krl"
+                    "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets\gossip/gossip-node.krl",
+                    "file://C:\Users\forrest.olson\Desktop\forrest\Picos\pico-rulesets\gossip\gossip-consolidated.krl"
                 ]
-            i = 0
+            i = 0 
         }
+
         every {
             install_custom_ruleset(child_eci,
                 files[0],
@@ -142,6 +188,9 @@ ruleset gossip.spawner {
                 {"sensor_id": sensor_id})
             install_custom_ruleset(child_eci,
                 files[5],
+                {"sensor_id": sensor_id})
+            install_custom_ruleset(child_eci,
+                files[6],
                 {"sensor_id": sensor_id})
         }
 
@@ -163,31 +212,19 @@ ruleset gossip.spawner {
 
     rule add_subscription {
         select when sensors subscribe
+
         pre {
             first_node = event:attrs{"first"}
             second_node = event:attrs{"second"}
         }
-        event:send({
-            "eci": ent:sensors.get([first_node, "eci"]),
-            "domain": "wrangler", "name": "subscription",
-            "attrs": {
-              "wellKnown_Tx": ent:sensors.get([second_node, "wellKnown_eci"]), 
-              "Rx_role":"node", "Tx_role":"node",
-              "name": ent:sensor_id.defaultsTo("newSub").as("String"), "channel_type": "subscription",
-              "rx_node":first_node, "tx_node":second_node
-            }
-          })
+
+        subscribe(first_node, second_node)
     }
 
     rule reset_nodes {
         select when spawner initialize
         foreach ent:sensors setting (sensor)
-        event:send(
-            { 
-                "eci": sensor.get("eci"), "eid": random:word(),
-                "domain": "node", "type": "reset",
-                "attrs": {}
-            }
-          )
+        reset_nodes(sensor)
     }
+
 }
